@@ -21,48 +21,41 @@ class SolutionGenerator:
 
     def generate_solution(self, task, test_data):
         context = self._prepare_historical_context()
-        prompt = f"""Task: {task}
-Test Data: {test_data}
-Historical Context: {context}
 
-Please create a complete solution that includes:
+        # Get code
+        code_prompt = f"""Task: {task}
+    Test Data: {test_data}
+    Historical Context: {context}
 
-1. Database creation code (cities, attractions, climate, costs)
+    Generate ONLY Python code for the solution. Start with imports and provide complete implementation."""
 
-2. Embedding and RAG implementation
+        code = self.claude.call_claude(code_prompt)
 
-3. User preference analysis
+        # Get requirements
+        req_prompt = """Based on the code above, list only Python package requirements, one per line.
+    Example format:
+    numpy>=1.20.0
+    pandas>=1.3.0
+    scikit-learn>=0.24.0"""
 
-4. Recommendation generation with explanations
+        requirements = self.claude.call_claude(req_prompt)
 
-5. Evaluation metrics
+        # Get conclusions
+        conclusions_prompt = """Analyze the generated solution and provide brief conclusions about:
 
-The solution should:
-- Use vector embeddings for RAG
-- Consider multiple factors (climate, budget, interests)
-- Provide detailed recommendations with explanations
-- Include evaluation metrics for improvement tracking
+    1. Implementation approach
 
-Format the response as JSON with keys: 'code', 'requirements', 'conclusions'"""
+    2. Expected performance
 
-        response = self.claude.call_claude(prompt)
-        try:
-            solution = json.loads(response)
-        except json.JSONDecodeError:
-            # Fallback to asking Claude to fix the format
-            fix_prompt = f"Please format the previous response as valid JSON with keys: 'code', 'requirements', 'conclusions'. Previous response: {response}"
-            response = self.claude.call_claude(fix_prompt)
-            solution = json.loads(response)
+    3. Potential improvements"""
 
-        # Save conclusions
-        self.conclusions.append({
-            "timestamp": datetime.now().isoformat(),
-            "task": task,
-            "conclusions": solution["conclusions"]
-        })
-        self.save_conclusions()
+        conclusions = self.claude.call_claude(conclusions_prompt)
 
-        return solution
+        return {
+            'code': code,
+            'requirements': requirements,
+            'conclusions': conclusions
+        }
 
     def _prepare_historical_context(self):
         if not self.conclusions:
