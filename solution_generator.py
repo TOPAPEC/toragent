@@ -34,7 +34,7 @@ class SolutionGenerator:
         # Get requirements
         req_prompt = f"""
         {code}
-        Based on the code above, list only Python package requirements, one per line.
+        Based on the code above, list only Python pip package requirements, one per line. Do not list built-in packages
     Example format:
     numpy>=1.20.0
     pandas>=1.3.0
