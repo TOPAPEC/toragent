@@ -25,8 +25,10 @@ class EnvironmentManager:
         venv.create(venv_dir, with_pip=True)
 
         # Install requirements
+        print("STARTING PACKAGE INSTALL")
         pip_path = os.path.join(venv_dir, "bin", "pip") if os.name != 'nt' else os.path.join(venv_dir, "Scripts", "pip")
         subprocess.run([pip_path, "install", "-r", os.path.join(iteration_dir, "requirements.txt")])
+        print("FINISHED PACKAGE INSTALL")
 
         return iteration_dir
 
@@ -35,6 +37,7 @@ class EnvironmentManager:
         
         output_file = os.path.join(iteration_dir, "output.txt")
         
+        print("Running iteration")
         try:
             result = subprocess.run(
                 [python_path, os.path.join(iteration_dir, "main.py")],

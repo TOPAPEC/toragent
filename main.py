@@ -68,8 +68,6 @@ def main():
 
     4. Explain recommendations
 
-    The system should improve its recommendations based on evaluation metrics.
-    Consider that chatbot will speak in russian, not english.
     For llm rag you can use Vikhrmodels/Vikhr-Nemo-12B-Instruct-R-21-09-24 from huggingface
     Here is the instruction on how to use it
     Как работать с RAG
@@ -138,6 +136,9 @@ Using documents: {"relevant_doc_ids": [0, 1]}
 
 Используя первый ответ модели relevant_indexes (JSON), можно понять нашла ли модель информацию в документах или нет, она обучена возврашать пустой массив если ее нет и в таком случае она будет отвечать, что не смогла найти информацию в базе знаний (при генерации второго ответа).
 
+End of example of rag usage.
+    The system should improve its recommendations based on evaluation metrics.
+    Consider that chatbot will speak in russian, not english.
 
     """
 
