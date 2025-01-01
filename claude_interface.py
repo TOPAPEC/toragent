@@ -108,5 +108,6 @@ class ClaudeInterface:
         return {
             "total_input": self.total_input_tokens,
             "total_output": self.total_output_tokens,
-            "estimated_cost": (self.total_input_tokens * 0.000015 + self.total_output_tokens * 0.000045)
+            "estimated_cost": (self.total_input_tokens * 0.000003 + self.total_output_tokens * 0.000015)
         }
+
