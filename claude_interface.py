@@ -16,10 +16,9 @@ SYSTEM_PROMPT = """You are a precise code generation assistant. Follow these rul
 2. When asked for requirements:
 - Use exact pip package names
 - One package per line
-- Include version numbers
-- Format: package>=version
 - No comments or explanations
 - No markdown formatting
+- No built-in python packages in list
 
 3. When asked for analysis or conclusions:
 - Be concise and specific
