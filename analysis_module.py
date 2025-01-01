@@ -19,7 +19,7 @@ class AnalysisModule:
             json.dump(self.history, f)
 
     def analyze_iteration(self, current_code, current_output, previous_analyses):
-        prompt = f"""Analyze the current iteration:
+        prompt = f"""Analyze the tourist chatbot iteration:
 
 Current Code:
 {current_code}
@@ -31,10 +31,18 @@ Previous Analyses:
 {json.dumps(previous_analyses[-3:] if previous_analyses else [], indent=2)}
 
 Please provide:
-1. Performance assessment
-2. Improvements/regressions
-3. Root cause analysis
-4. Tuning recommendations
+
+1. Database quality assessment (cities coverage, attraction details)
+
+2. RAG implementation effectiveness
+
+3. Preference analysis accuracy
+
+4. Recommendation relevance for each test query
+
+5. Improvement/regression compared to previous iterations
+
+6. Tuning recommendations
 
 Format the response as JSON with these keys."""
 

@@ -20,19 +20,28 @@ class SolutionGenerator:
             json.dump(self.conclusions, f)
 
     def generate_solution(self, task, test_data):
-        # Prepare prompt with historical context
         context = self._prepare_historical_context()
         prompt = f"""Task: {task}
 Test Data: {test_data}
 Historical Context: {context}
 
-Please analyze the task and generate:
+Please create a complete solution that includes:
 
-1. Python code solution
+1. Database creation code (cities, attractions, climate, costs)
 
-2. Requirements.txt content
+2. Embedding and RAG implementation
 
-3. Analysis and conclusions
+3. User preference analysis
+
+4. Recommendation generation with explanations
+
+5. Evaluation metrics
+
+The solution should:
+- Use vector embeddings for RAG
+- Consider multiple factors (climate, budget, interests)
+- Provide detailed recommendations with explanations
+- Include evaluation metrics for improvement tracking
 
 Format the response as JSON with keys: 'code', 'requirements', 'conclusions'"""
 

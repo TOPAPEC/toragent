@@ -58,21 +58,105 @@ def main():
 
     # Test task and data
     test_task = """
-    Create a simple NLP system that can identify basic emotions in text.
-    The system should classify text into: happy, sad, angry, or neutral.
+    Create a tourist chatbot for Russian cities that will:
+
+    1. Build its own database of cities and attractions for given list of cities
+
+    2. Analyze user preferences from their query (climate, budget, interests)
+
+    3. Use RAG to match cities and attractions to user preferences
+
+    4. Explain recommendations
+
+    The system should improve its recommendations based on evaluation metrics.
+    Consider that chatbot will speak in russian, not english.
+    For llm rag you can use Vikhrmodels/Vikhr-Nemo-12B-Instruct-R-21-09-24 from huggingface
+    Here is the instruction on how to use it
+    Как работать с RAG
+Роль documents представляет из себя список словарей с описанием контента документов, с примнением json.dumps(array, ensure_ascii=False) (см. пример ниже).
+Контент документов может быть представлен в 3 различных форматах: Markdown, HTML, Plain Text. Контент каждого документа - может быть чанком текста длиной до 4к символов.
+
+[
+  {
+    "doc_id": (0..5),
+    "title": "(null or str)",
+    "content": "(html or markdown or plain text)"
+  }
+]
+
+Пример правильного использования с OpenAI-like API
+Запуск vLLM сервера: vllm serve --dtype half --max-model-len 32000 -tp 1 Vikhrmodels/Vikhr-Nemo-12B-Instruct-R-21-09-24 --api-key token-abc123
+
+GROUNDED_SYSTEM_PROMPT = "Your task is to answer the user's questions using only the information from the provided documents. Give two answers to each question: one with a list of relevant document identifiers and the second with the answer to the question itself, using documents with these identifiers."
+
+documents = [
+  {
+    "doc_id": 0,
+    "title": "Глобальное потепление: ледники",
+    "content": "За последние 50 лет объем ледников в мире уменьшился на 30%"
+  },
+  {
+    "doc_id": 1,
+    "title": "Глобальное потепление: Уровень моря",
+    "content": "Уровень мирового океана повысился на 20 см с 1880 года и продолжает расти на 3,3 мм в год"
+  }
+]
+sample_history = [
+    {'role': 'system', 'content': GROUNDED_SYSTEM_PROMPT}, 
+    {'role': 'documents', 'content': json.dumps(documents, ensure_ascii=False)},
+    {'role': 'user', 'content': 'Глоабльное потепление'}
+]
+relevant_indexes = llm_client.chat.completions.create(
+    model=llm_model,
+    messages=sample_history,
+    temperature=0.0,
+    max_tokens=2048
+).choices[0].message.content
+
+print('Using documents: ' + relevant_indexes + '\n----')
+final_answer = llm_client.chat.completions.create(
+    model=llm_model,
+    messages=sample_history + [{'role': 'assistant', 'content': relevant_indexes}],
+    temperature=0.3,
+    max_tokens=2048
+).choices[0].message.content
+
+print(final_answer)
+
+Ответ после выполнения кода будет выглядеть примерно так:
+
+Using documents: {"relevant_doc_ids": [0, 1]}
+----
+
+Глобальное потепление – это долгосрочное повышение средней температуры атмосферы и океанов Земли. Это явление имеет множество последствий для нашей планеты, и среди них можно выделить два ключевых аспекта, основанных на доступных мне данных:
+
+1. **Уменьшение объема ледников**: За последние 50 лет наблюдается значительное сокращение объема ледников по всему миру. Согласно данным, объем ледников уменьшился на 30%. Это может быть связано с таянием ледников из-за повышения температур, что является одним из признаков глобального потепления.
+
+2. **Повышение уровня моря**: Уровень мирового океана также увеличивается, что связано с таянием ледников и ледяных покровов, а также с расширением воды при повышении температуры. С 1880 года уровень моря повысился на 20 сантиметров, и этот процесс продолжается, с ежегодным увеличением на 3,3 миллиметра.
+
+Эти изменения имеют серьезные последствия для экосистем, климата и человеческого общества. Таяние ледников приводит к повышению уровня моря, что может привести к затоплению прибрежных территорий и островов, а также к изменению водных ресурсов и климатических паттернов.
+
+Используя первый ответ модели relevant_indexes (JSON), можно понять нашла ли модель информацию в документах или нет, она обучена возврашать пустой массив если ее нет и в таком случае она будет отвечать, что не смогла найти информацию в базе знаний (при генерации второго ответа).
+
+
     """
 
     test_data = """
-    Sample texts:
+    Cities list: ["Москва", "Санкт-Петербург", "Сочи", ...] # full list here
 
-    1. "I love this beautiful day!"
+    Test queries:
 
-    2. "I'm feeling really down today."
+    1. "Хочу поехать на море летом, бюджет ограничен, люблю исторические места"
 
-    3. "This is absolutely frustrating!"
+    2. "Ищу город для зимнего отдыха, интересует горнолыжный спорт и спа, бюджет не ограничен"
 
-    4. "The sky is blue."
+    3. "Планирую культурную поездку весной, интересуют музеи и театры, средний бюджет"
+
+    4. "Хочу посетить места с красивой природой осенью, без большого количества туристов, бюджет средний"
+
+    5. "Ищу город для гастрономического туризма летом, интересует местная кухня и рынки, готов потратиться"
     """
+
 
     # Save initial configuration
     save_step_result(run_dir, "00_initial_config", {
