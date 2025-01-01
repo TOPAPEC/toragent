@@ -10,7 +10,6 @@ class EnvironmentManager:
         os.makedirs(self.base_dir, exist_ok=True)
 
     def create_iteration(self, code, requirements):
-        # Create new iteration directory
         iteration_dir = os.path.join(self.base_dir, f"iteration_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
         os.makedirs(iteration_dir)
 
@@ -21,14 +20,25 @@ class EnvironmentManager:
             f.write(requirements)
 
         # Create venv
-        venv_dir = os.path.join(iteration_dir, "venv")
-        venv.create(venv_dir, with_pip=True)
+        venv.create(os.path.join(iteration_dir, "venv"), with_pip=True)
 
-        # Install requirements
-        print("STARTING PACKAGE INSTALL")
-        pip_path = os.path.join(venv_dir, "bin", "pip") if os.name != 'nt' else os.path.join(venv_dir, "Scripts", "pip")
-        subprocess.run([pip_path, "install", "-r", os.path.join(iteration_dir, "requirements.txt")])
-        print("FINISHED PACKAGE INSTALL")
+        # Install requirements with timeout
+        pip_path = os.path.join(iteration_dir, "venv", "bin", "pip") if os.name != 'nt' else os.path.join(iteration_dir, "venv", "Scripts", "pip")
+        try:
+            process = subprocess.run(
+                [pip_path, "install", "-r", os.path.join(iteration_dir, "requirements.txt")],
+                timeout=300,  # 2 minutes timeout
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            print("Installation output:", process.stdout)
+        except subprocess.TimeoutExpired:
+            print("Package installation timed out")
+            return iteration_dir
+        except subprocess.CalledProcessError as e:
+            print(f"Installation failed: {e.output}")
+            return iteration_dir
 
         return iteration_dir
 
