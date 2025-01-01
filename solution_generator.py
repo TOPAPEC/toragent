@@ -32,7 +32,9 @@ class SolutionGenerator:
         code = self.claude.call_claude(code_prompt)
 
         # Get requirements
-        req_prompt = """Based on the code above, list only Python package requirements, one per line.
+        req_prompt = f"""
+        {code}
+        Based on the code above, list only Python package requirements, one per line.
     Example format:
     numpy>=1.20.0
     pandas>=1.3.0

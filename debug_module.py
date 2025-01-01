@@ -24,7 +24,8 @@ class DebugModule:
         current_code = code
 
         while debug_steps < self.max_debug_steps:
-            prompt = f"""Debug the following code:
+            # Get error analysis
+            analysis_prompt = f"""Analyze this error in the code:
 
 Code:
 {current_code}
@@ -35,29 +36,37 @@ Error:
 Requirements:
 {requirements}
 
-Please provide:
 
-1. Analysis of the error
+"""
 
-2. Fixed code
+            error_analysis = self.claude.call_claude(analysis_prompt + "Provide detailed error analysis and root cause.")
 
-3. Any necessary requirement changes
+            # Get fixed code
+            fix_prompt = f"""Based on the error analysis, provide the complete fixed code.
+Output only the code, no explanations."""
 
-4. Debug conclusions
+            fixed_code = self.claude.call_claude(analysis_prompt + error_analysis + fix_prompt)
 
-Format the response as JSON with these keys."""
+            # Get requirement changes
+            req_prompt = """List any new package requirements needed for the fixed code.
+List one requirement per line in pip format. If no new requirements needed, respond with 'No new requirements'."""
 
-            debug_response = self.claude.call_claude(prompt)
-            try:
-                debug_result = json.loads(debug_response)
-            except json.JSONDecodeError:
-                continue
+            requirement_changes = self.claude.call_claude(analysis_prompt + error_analysis + req_prompt)
+
+            # Get debug conclusions
+            conclusions_prompt = """Summarize what was fixed and what improvements were made.
+Be brief and specific."""
+
+            debug_conclusions = self.claude.call_claude(analysis_prompt + error_analysis + conclusions_prompt)
 
             debug_record = {
                 "timestamp": datetime.now().isoformat(),
                 "step": debug_steps + 1,
                 "original_error": error_message,
-                "debug_result": debug_result
+                "analysis": error_analysis,
+                "fixed_code": fixed_code,
+                "requirement_changes": requirement_changes,
+                "conclusions": debug_conclusions
             }
 
             self.history.append(debug_record)
@@ -69,8 +78,11 @@ Format the response as JSON with these keys."""
                 if user_input.lower() != 'yes':
                     break
 
-            current_code = debug_result["fixed_code"]
+            current_code = fixed_code
             debug_steps += 1
 
-        return current_code, debug_result.get("requirement_changes", [])
+            # Check if the conclusions indicate the problem is solved
+            if "solved" in debug_conclusions.lower() or "fixed" in debug_conclusions.lower():
+                break
 
+        return current_code, requirement_changes.split('\n') if requirement_changes != 'No new requirements' else []
