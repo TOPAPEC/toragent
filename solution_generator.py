@@ -27,7 +27,7 @@ class SolutionGenerator:
     Test Data: {test_data}
     Historical Context: {context}
 
-    Generate ONLY Python code for the solution. Start with imports and provide complete implementation."""
+    Generate ONLY Python code for the solution. be brief, no code comments"""
 
         code = self.claude.call_claude(code_prompt)
 
