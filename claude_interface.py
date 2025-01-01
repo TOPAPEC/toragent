@@ -5,7 +5,7 @@ import os
 
 class ClaudeInterface:
     def __init__(self, api_key):
-        self.client = anthropic.Client(api_key)
+        self.client = anthropic.Anthropic(api_key=api_key)
         self.total_input_tokens = 0
         self.total_output_tokens = 0
         self.history_file = "claude_history.json"
@@ -15,6 +15,8 @@ class ClaudeInterface:
         if os.path.exists(self.history_file):
             with open(self.history_file, 'r') as f:
                 self.history = json.load(f)
+                self.total_input_tokens = sum(record.get('input_tokens', 0) for record in self.history)
+                self.total_output_tokens = sum(record.get('output_tokens', 0) for record in self.history)
         else:
             self.history = []
 
@@ -27,6 +29,7 @@ class ClaudeInterface:
         print("=" * 50)
         print(prompt)
         print("=" * 50)
+        print(f"Current total usage: Input tokens: {self.total_input_tokens}, Output tokens: {self.total_output_tokens}")
 
         input("Press Enter to proceed with the call...")
 
@@ -44,7 +47,9 @@ class ClaudeInterface:
             "prompt": prompt,
             "response": response.content[0].text,
             "input_tokens": response.usage.input_tokens,
-            "output_tokens": response.usage.output_tokens
+            "output_tokens": response.usage.output_tokens,
+            "running_total_input": self.total_input_tokens,
+            "running_total_output": self.total_output_tokens
         }
 
         self.history.append(call_record)
@@ -54,14 +59,15 @@ class ClaudeInterface:
         print("=" * 50)
         print(response.content[0].text)
         print("=" * 50)
-        print(f"Input tokens: {response.usage.input_tokens}")
-        print(f"Output tokens: {response.usage.output_tokens}")
+        print(f"This call: Input tokens: {response.usage.input_tokens}, Output tokens: {response.usage.output_tokens}")
+        print(f"Running total: Input tokens: {self.total_input_tokens}, Output tokens: {self.total_output_tokens}")
+        print(f"Total cost estimate: ${(self.total_input_tokens * 0.000015 + self.total_output_tokens * 0.000045):.4f}")
 
         return response.content[0].text
 
     def get_token_usage(self):
         return {
             "total_input": self.total_input_tokens,
-            "total_output": self.total_output_tokens
+            "total_output": self.total_output_tokens,
+            "estimated_cost": (self.total_input_tokens * 0.000015 + self.total_output_tokens * 0.000045)
         }
-
